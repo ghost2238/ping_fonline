@@ -1,0 +1,103 @@
+; My awesome standard library...
+; exit                  - syscall to exit.
+; print(msg,msg_size)   - print some message. 
+; println(msg,msg_size) - print some message with newline.
+; itoa(number,dst,base) - convert number to null terminated string using specified base.
+
+; Network stuff
+; ...
+
+segment readable writeable executable
+
+; Declare a string + length var
+macro decl_str var, str
+{
+	var db str
+	var#.len = $-var
+}
+
+; Print a declared string
+macro print_str var { print var,var#.len }
+macro println_str var { println var,var#.len }
+macro print msg, msg_size
+{
+	push rdx
+	push rsi
+    mov rdx, msg_size
+    mov rsi, msg
+    call stdout
+	pop rsi
+	pop rdx
+}
+
+macro println msg, msg_size
+{
+	print msg, msg_size
+	print lf, lf_size 
+}
+
+macro itoa num,base,dst
+{
+	push rax
+	push rbx
+	push rcx
+	mov eax, num
+	mov ebx, base
+	mov rcx, dst
+	call _itoa
+	pop rcx
+	pop rbx
+	pop rax
+}
+
+; eax = number to convert
+; ebx = base
+; ecx = dst adress to save 
+_itoa:
+	mov r8b, 0 ; counter
+	mov dx, 0
+	mov qword [dst_adr], rcx
+.loop:
+	mov edx, 0
+	; mov ebx, 10     ; base 10
+	div ebx
+	add dl, 48        ; ascii 0
+	mov r9, itoa_buf  ; load our temp buffer
+	add r9, r8        ; add offset
+	mov byte [r9], dl
+	inc r8b
+	cmp eax, 0 ; if eax = 0
+	jne .loop
+	dec r8b
+	; loop in reverse order and save to our specified dst adress
+	mov r10,qword [dst_adr]
+.save_result:
+	mov r9,itoa_buf
+	add r9,r8
+	mov r12b,byte [r9]  ; copy a digit from itoa_buf
+	mov byte [r10],r12b ; to dst_adr
+	inc r10
+	dec r8b
+	cmp r8b,-1
+	jne .save_result
+	; inc r10 ; TODO: add NUL ?
+	ret
+
+stdout:
+	push rax
+	push rdi
+	mov edi,1
+	mov eax,1
+	syscall
+	pop rdi
+	pop rax
+	ret
+
+exit:
+    xor edi,edi ; exit code 0
+    mov eax,60  ; sys_exit
+    syscall
+
+lf db 0xA
+dst_adr db '           '
+itoa_buf db '          '

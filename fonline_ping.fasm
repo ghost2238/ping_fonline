@@ -1,0 +1,32 @@
+; Ping some FOnline server and receive amount of players + uptime.
+; Written in FASM, using only linux syscalls, some lightweight macros and "standard functions"
+
+format ELF64 executable at 0000000100000000h
+
+segment readable writeable executable
+
+include 'utils.fasm'
+
+entry $
+	println_str msg_sock
+	mov rdx,0 ; IP
+	mov rsi,1 ; SOCK_STREAM 
+	mov rdi,2 ; AF_INET
+	mov eax,41 ; sys_socket
+	syscall
+	itoa eax, 10, result ; convert to decimal ascii string
+	print_str msg_fd
+	println result,4
+	cmp rax,-1
+	jne sock_created	
+	call exit
+sock_created:
+	println_str msg_conn
+	call exit
+
+segment readable writeable
+
+result db '           '
+decl_str msg_sock,'Creating socket...'
+decl_str msg_fd,'Received filedescriptor: '
+decl_str msg_conn,'Connecting...'
