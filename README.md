@@ -17,6 +17,6 @@ where 4 is current online, 4 bytes is uptime in seconds, others 8 is reserved. A
 
 `node ping.js play.fonline-reloaded.net 2238`
 
-> Connected to play.fonline-reloaded.net:2238
-> Players: 8
+> Connected to play.fonline-reloaded.net:2238<br>
+> Players: 8<br>
 > Uptime: 6 days, 8 hours, 5 minutes
